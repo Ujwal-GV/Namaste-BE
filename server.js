@@ -16,7 +16,7 @@ const requestRoutes = require("./routes/requestRoutes");
 connectDB();
 
 const app = express();
-const port = 8084;
+const port = process.env.PORT || 8084;
 
 app.use(cors({
     origin: ["http://localhost:5173",],
@@ -39,4 +39,4 @@ app.use("/admin", adminRoutes);
 app.use("/utilities", utilityRoutes);
 app.use("/requests", requestRoutes);
 
-app.listen(8084, () => console.log("Server running at port:\t" + port));
+app.listen(port, () => console.log("Server running at port:\t" + port));
