@@ -220,10 +220,7 @@ exports.updateRequestStatus = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
-    const userId = req.user.id;
-
-    console.log("User Id", userId);
-    
+    const userId = req.user.id;    
 
     const updates = {};
 
@@ -242,6 +239,18 @@ exports.updateProfile = async (req, res) => {
     if (req.files?.propertyProof) {
       updates["documents.propertyProof"] =
         req.files.propertyProof[0].path;
+    }    
+    
+    if (req.body.removeProfilePic === "true") {
+        updates.profilePic = "";
+    }
+
+    if (req.body.removeIdProof === "true") {
+        updates["documents.idProof"] = "";
+    }
+
+    if (req.body.removePropertyProof === "true") {
+        updates["documents.propertyProof"] = "";
     }
 
     const user = await User.findByIdAndUpdate(
