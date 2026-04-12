@@ -1,4 +1,5 @@
 const Property = require("../models/Property");
+const Request = require("../models/Request");
 
 exports.addProperty = async (req, res) => {
     console.log("Add property1", req.user.id);
@@ -157,5 +158,34 @@ exports.getMyProperties = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: error.message });
+  }
+};
+
+exports.updateRequestStatus = async (req, res) => {
+  try {    
+    const { requestId } = req.params;
+    const { status } = req.body;
+
+    console.log("Entered update", status)
+
+    const request = await Request.findById(requestId).populate("property"); 
+    console.log("Request", request);
+       
+
+    if (!request) {        
+      return res.status(404).json({ message: "Request not found" });
+    }
+
+    // Only owner of property can update
+    if (request.property.createdBy.toString() !== req.user.id) {        
+      return res.status(403).json({ message: "Not authorized" });
+    }
+
+    request.status = status;
+    await request.save();
+
+    res.json({ message: `Request ${status}`, request });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };

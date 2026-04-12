@@ -11,6 +11,7 @@ const {
     updateProperty,
     deleteProperty,
     getMyProperties,
+    updateRequestStatus,
 } = require("../controllers/propertyController");
 const upload = require("../controllers/upload");
 
@@ -22,5 +23,7 @@ propertyRoutes.put("/:id", protect, authorizeRoles("owner", "admin"), upload.arr
 propertyRoutes.delete("/:id", protect, authorizeRoles("admin", "owner"), deleteProperty);
 
 propertyRoutes.get("/my-properties/:id", protect, getMyProperties);
+propertyRoutes.put("/update-status/:requestId", protect, updateRequestStatus);
+
 
 module.exports = propertyRoutes;

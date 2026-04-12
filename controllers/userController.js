@@ -189,35 +189,6 @@ exports.getOwnerRequests = async (req, res) => {
   }
 };
 
-exports.updateRequestStatus = async (req, res) => {
-  try {    
-    const { requestId } = req.params;
-    const { status } = req.body;
-
-    console.log("Entered update", requestId)
-
-    const request = await Request.findById(requestId).populate("property"); 
-    console.log("Request", request);
-       
-
-    if (!request) {        
-      return res.status(404).json({ message: "Request not found" });
-    }
-
-    // Only owner of property can update
-    if (request.property.createdBy.toString() !== req.user.id) {        
-      return res.status(403).json({ message: "Not authorized" });
-    }
-
-    request.status = status;
-    await request.save();
-
-    res.json({ message: `Request ${status}`, request });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
 exports.updateProfile = async (req, res) => {
   try {
     const userId = req.user.id;    

@@ -14,7 +14,6 @@ userRoutes.get("/profile", protect, getProfile);
 userRoutes.post("/apply-owner", protect, applyForOwner);
 userRoutes.post("/request-contact", protect, requestContact);
 userRoutes.get("/owner", protect, getOwnerRequests);
-// userRoutes.put("/:requestId", protect, updateRequestStatus);
 userRoutes.put("/update-profile", protect, upload.fields([
     { name: "profilePic", maxCount: 1 },
     { name: "idProof", maxCount: 1 },
