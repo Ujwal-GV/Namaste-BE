@@ -6,6 +6,36 @@ const contactRequest = require("../models/contactRequest");
 const Request = require("../models/Request");
 const { default: mongoose } = require("mongoose");
 const Otp = require("../models/Otp");
+const nodeMailer = require('nodemailer');
+
+exports.sendMail = async (data,req,res)=>{
+    try {
+      const transporter = nodeMailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
+        auth: {
+          user: process.env.MAIL_ID,
+          pass: process.env.MAIL_PASS,
+        },
+      });
+      
+        const info = await transporter.sendMail({
+          from: `"Namaste.in" <${data.from}>` , 
+          to: data.to, 
+          subject: data.subject, 
+          text: data.text, 
+          html: data.html, 
+        });
+      
+        console.log("Message sent: %s", info.messageId);
+      
+    } catch (error) {
+      
+      throw new Error(error)
+    }
+  
+};
 
 
 const generateToken = (user) => {
@@ -37,6 +67,13 @@ exports.sendOtp = async (req, res) => {
         expiresAt: new Date(Date.now() + 60 * 1000), // 1 minute 
     });
 
+     await this.sendMail({
+        from: process.env.MAIL_ID,
+        to: email,
+        subject: "Your OTP for Signup",
+        text: `Your OTP is ${otp}. It is valid for 1 minute.`,
+        html: `<p>Your OTP is <strong>${otp}</strong>. It is valid for 1 minute.</p>`,
+    });
     console.log("OTP", otp);
 
     res.json({ message: "OTP sent" });
