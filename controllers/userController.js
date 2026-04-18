@@ -5,12 +5,60 @@ const Property = require("../models/Property");
 const contactRequest = require("../models/contactRequest");
 const Request = require("../models/Request");
 const { default: mongoose } = require("mongoose");
+const Otp = require("../models/Otp");
 
 
 const generateToken = (user) => {
     return jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
         expiresIn: "7d",
     });
+};
+
+const generateOtp = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+exports.sendOtp = async (req, res) => {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+
+    if(user) {
+        return res.status(400).json({ message: "User already exists" });
+    }
+
+    const otp = generateOtp();
+
+    await Otp.deleteMany({ email });
+
+    await Otp.create({
+        email,
+        otp,
+        expiresAt: new Date(Date.now() + 60 * 1000), // 1 minute 
+    });
+
+    console.log("OTP", otp);
+
+    res.json({ message: "OTP sent" });
+    
+};
+
+exports.verifyOtp = async (req, res) => {
+  const { email, otp } = req.body;
+
+  const record = await Otp.findOne({ email, otp });
+
+  if (!record) {
+    return res.status(400).json({ message: "Invalid OTP" });
+  }
+
+  if (record.expiresAt < new Date()) {
+    return res.status(400).json({ message: "OTP expired" });
+  }
+
+  await Otp.deleteMany({ email });
+
+  res.json({ message: "OTP verified" });
 };
 
 exports.register = async(req, res) => {    

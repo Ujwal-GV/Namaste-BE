@@ -1,12 +1,14 @@
 const express = require("express");
 const userRoutes = express.Router();
 
-const { register, login, getProfile, applyForOwner, requestContact, getOwnerRequests, updateRequestStatus, updateProfile, getUserApplications } = require("../controllers/userController");
+const { register, login, getProfile, applyForOwner, requestContact, getOwnerRequests, updateRequestStatus, updateProfile, getUserApplications, sendOtp, verifyOtp } = require("../controllers/userController");
 const authorizeRoles = require("../middleware/roleMiddleware");
 const protect = require("../middleware/authMiddleware");
 const upload = require("../controllers/upload");
 console.log("Entered routes");
 
+userRoutes.post("/send-otp", sendOtp);
+userRoutes.post("/verify-otp", verifyOtp);
 userRoutes.post("/register", register);
 userRoutes.post("/login", login);
 
