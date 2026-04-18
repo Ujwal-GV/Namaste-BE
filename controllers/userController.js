@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const Property = require("../models/Property");
 const contactRequest = require("../models/contactRequest");
 const Request = require("../models/Request");
+const { default: mongoose } = require("mongoose");
 
 
 const generateToken = (user) => {
@@ -81,9 +82,39 @@ exports.getProfile = async(req, res) => {
 
 exports.applyForOwner = async(req, res) => {
     try {
-        const { idProof, propertyProof } = req.body;
+        console.log("ID", req);
         
-        const user = await User.findById(req.user.id);
+        const userId = await User.findById(req.user.id);
+
+        const updates = {};
+
+        if (req.files?.idProof) {
+            updates["documents.idProof"] =
+            req.files.idProof[0].path;
+        }
+
+        if (req.files?.propertyProof) {
+            updates["documents.propertyProof"] =
+            req.files.propertyProof[0].path;
+        }    
+        
+        if (req.body.removeProfilePic === "true") {
+            updates.profilePic = "";
+        }
+
+        if (req.body.removeIdProof === "true") {
+            updates["documents.idProof"] = "";
+        }
+
+        if (req.body.removePropertyProof === "true") {
+            updates["documents.propertyProof"] = "";
+        }
+
+        const user = await User.findByIdAndUpdate(
+            userId,
+            { $set: updates },
+            { new: true }
+        );
 
         if(user.verificationStatus === "blocked") {
             return res.status(403).json({ message: "Account blocked. Cannot apply again" });
@@ -93,17 +124,14 @@ exports.applyForOwner = async(req, res) => {
             return res.status(400).json({ message: "Already applied" });
         }
 
-        user.documents = {
-            idProof,
-            propertyProof,
-        };
-
         user.verificationStatus = "pending";
 
         await user.save();
 
         res.json({ user, message: "Application sumbitted for approval" });
     } catch (error) {
+        console.log(error);
+        
         res.status(500).json({ message: error.message });
     }
 }
@@ -141,10 +169,10 @@ exports.getOwnerRequests = async (req, res) => {
 
     {
         $lookup: {
-        from: "users",
-        localField: "requester",
-        foreignField: "_id",
-        as: "user",
+            from: "users",
+            localField: "requester",
+            foreignField: "_id",
+            as: "user",
         },
     },
 
@@ -157,10 +185,10 @@ exports.getOwnerRequests = async (req, res) => {
 
     {
         $lookup: {
-        from: "properties",
-        localField: "property",
-        foreignField: "_id",
-        as: "property",
+            from: "properties",
+            localField: "property",
+            foreignField: "_id",
+            as: "property",
         },
     },
 
@@ -191,7 +219,7 @@ exports.getOwnerRequests = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
-    const userId = req.user.id;    
+    const userId = req.user.id;
 
     const updates = {};
 
@@ -235,4 +263,61 @@ exports.updateProfile = async (req, res) => {
     console.log("UPDATE ERROR:", error.message);
     res.status(500).json({ message: error.message });
   }
+};
+
+exports.getUserApplications = async (req, res) => {
+    const id = req.user.id;
+    console.log("ID", id);
+
+    const requests = await Request.aggregate([
+    {
+        $match: {
+            user: new mongoose.Types.ObjectId(id),
+        },
+    },
+    {
+        $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "user",
+        },
+    },
+    {
+    $unwind: {
+        path: "$user",
+        preserveNullAndEmptyArrays: true,
+    },
+    },
+
+    {
+        $lookup: {
+        from: "properties",
+        localField: "property",
+        foreignField: "_id",
+        as: "property",
+        },
+    },
+
+    {
+    $unwind: {
+        path: "$property",
+        preserveNullAndEmptyArrays: true,
+    },
+    },
+
+    {
+        
+    $project: {
+        message: 1,
+        status: 1,
+        createdAt: 1,
+        user: "$user",
+        property: "$property",
+    },
+    },
+    ]);
+    console.log("My app", requests);
+
+    res.json(requests);
 };

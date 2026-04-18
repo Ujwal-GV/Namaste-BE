@@ -10,6 +10,7 @@ const propertyRoutes = require("./routes/propertyRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const utilityRoutes = require("./routes/utilityRoutes");
 const requestRoutes = require("./routes/requestRoutes");
+const conversationRoutes = require("./routes/conversationRoutes");
 // const passport = require("passport");
 
 
@@ -38,5 +39,6 @@ app.use("/property", propertyRoutes);
 app.use("/admin", adminRoutes);
 app.use("/utilities", utilityRoutes);
 app.use("/requests", requestRoutes);
+app.use("/conversations", conversationRoutes);
 
 server.listen(port, () => console.log("Server running at port:\t" + port));
