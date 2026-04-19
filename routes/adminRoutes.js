@@ -5,7 +5,7 @@ const protect = require("../middleware/authMiddleware");
 const authorizeRoles = require("../middleware/roleMiddleware");
 
 const {
-    getPendingOwners,
+    getOwnerRequests,
     approveOwner,
     rejectOwner,
     getStats,
@@ -17,10 +17,10 @@ const adminOnly = require("../middleware/adminMiddleware");
 
 adminRoutes.use(protect, authorizeRoles("admin"));
 
-adminRoutes.get("/owner-requests", protect, adminOnly, getPendingOwners);
-adminRoutes.get("/approve-owner/:id", protect, adminOnly, approveOwner);
+adminRoutes.get("/owner-requests", protect, adminOnly, getOwnerRequests);
+adminRoutes.put("/approve-owner/:id", protect, adminOnly, approveOwner);
 
-adminRoutes.post("/reject-owner/:id", protect, adminOnly, rejectOwner);
+adminRoutes.put("/reject-owner/:id", protect, adminOnly, rejectOwner);
 
 adminRoutes.get("/stats", protect, adminOnly, getStats);
 

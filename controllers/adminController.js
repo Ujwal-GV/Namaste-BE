@@ -1,45 +1,120 @@
 const Property = require("../models/Property");
 const User = require("../models/User");
 
-exports.getPendingOwners = async(req, res) => {
-    try {
-        const users = await User.find({ verificationStatus: "pending", }).select("-password");
-        console.log("Pending owner requests", users);
-        
-        res.json(users);
-    } catch (error) {
-        res.status(500). json({ message: error.message });
+exports.getOwnerRequests = async (req, res) => {
+  try {
+    const {
+      status = "all",
+      page = 1,
+      limit = 10,
+      search = "",
+    } = req.query;
+
+    const query = {
+        role: "owner"
+    };
+
+    if (status !== "all") {
+      query.verificationStatus = status;
     }
-}
+
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    if (status === "rejected" || status === "pending") {
+        query.role = "user";
+    }
+
+    console.log("QUERY", query);
+    
+
+    const skip = (page - 1) * limit;
+
+    const users = await User.find(query)
+      .select("-password")
+      .skip(skip)
+      .limit(Number(limit))
+      .sort({ createdAt: -1 });  
+      
+     console.log("USERS OWNER PENDING", users);
+      
+
+    const total = await User.countDocuments(query);
+
+    const statusCounts = await User.aggregate([
+        {
+            $group: {
+                _id: "$verificationStatus",
+                count: { $sum: 1 },
+            },
+        },
+    ]);
+
+    const counts = {
+        pending: 0,
+        approved: 0,
+        rejected: 0,
+    };
+
+        statusCounts.forEach((item) => {
+        counts[item._id] = item.count;
+    });
+
+    res.json({
+      data: users,
+      total,
+      page: Number(page),
+      totalPages: Math.ceil(total / limit),
+      counts,
+      totalUsers: await User.countDocuments({ role: "owner", verificationStatus: ["pending", "approved", "rejected"] })
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 exports.approveOwner = async(req, res) => {
     try {
-        const user = await User.findById(req.params.id);
+        const { id } = req.params;
+        const { status } = req.body;
 
-        if(!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
+        console.log("APPROVE OWNER", id, status);
 
-        user.role = "owner";
-        user.verificationStatus = "approved";
+        const user = await User.findByIdAndUpdate(
+            id,
+            { verificationStatus: status,
+                role: "owner"
+            },
+            { new: true }
+        );
 
         await user.save();
 
-        res.json({ message: "User approved as owner" });
+        res.json({ message: "User request approved as owner" });
     } catch (error) {
+        console.log("ERR", error);
+        
         res.status(500). json({ message: error.message });
     }
 }
 
 exports.rejectOwner = async(req, res) => {
     try {
-        const { reason } = req.body;
+        const { id } = req.params;
+        const { status } = req.body;
 
-        if(!reason) {
-            return res.status(400).json({ message: "Rejection reason required" });
-        }
+        console.log("REJECT OWNER", id, status);
+        
 
-        const user = await User.findById(req.params.id);
+        const user = await User.findById(id);
+
+        console.log("USER", user);
+        
 
         if(!user) {
             return res.status(404).json({ message: "User not found" });
@@ -47,13 +122,20 @@ exports.rejectOwner = async(req, res) => {
 
         user.rejectionDetails.count += 1;
 
-        user.verificationStatus = "rejected";
-        user.rejectionDetails.reason = reason;
         user.rejectionDetailsrejectedAt = new Date();
 
         if(user.rejectionDetails.count >= 4) {
             user.accountStatus = "blocked";
         }
+
+        const result = await User.findByIdAndUpdate(
+            id,
+            { verificationStatus: status },
+            { new: true }
+        );
+
+        console.log("RESULT", result);
+        
 
         await user.save();
 
@@ -63,6 +145,7 @@ exports.rejectOwner = async(req, res) => {
             : "Application rejected with reason",
         rejectionCount: user.rejectionDetails.count });
     } catch (error) {
+        console.log("ERR1", error);
         res.status(500). json({ message: error.message });
     }
 }
