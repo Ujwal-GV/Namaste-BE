@@ -146,7 +146,7 @@ exports.login = async(req, res) => {
         }
 
         if(user.accountStatus === "blocked") {
-            return res.status(403).json({ message: "Your account is blocked due to multiple failed verifications." });
+            return res.status(403).json({ message: "Your account is blocked. Please contact admin" });
         }
 
         res.json({ token: generateToken(user), });

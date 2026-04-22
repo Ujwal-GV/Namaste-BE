@@ -1,5 +1,7 @@
+const { default: mongoose } = require("mongoose");
 const Property = require("../models/Property");
 const User = require("../models/User");
+const Request = require("../models/Request");
 
 exports.getOwnerRequests = async (req, res) => {
   try {
@@ -27,10 +29,7 @@ exports.getOwnerRequests = async (req, res) => {
 
     if (status === "rejected" || status === "pending") {
         query.role = "user";
-    }
-
-    console.log("QUERY", query);
-    
+    }    
 
     const skip = (page - 1) * limit;
 
@@ -38,10 +37,7 @@ exports.getOwnerRequests = async (req, res) => {
       .select("-password")
       .skip(skip)
       .limit(Number(limit))
-      .sort({ createdAt: -1 });  
-      
-     console.log("USERS OWNER PENDING", users);
-      
+      .sort({ createdAt: -1 });        
 
     const total = await User.countDocuments(query);
 
@@ -96,9 +92,7 @@ exports.approveOwner = async(req, res) => {
         await user.save();
 
         res.json({ message: "User request approved as owner" });
-    } catch (error) {
-        console.log("ERR", error);
-        
+    } catch (error) {        
         res.status(500). json({ message: error.message });
     }
 }
@@ -112,9 +106,6 @@ exports.rejectOwner = async(req, res) => {
         
 
         const user = await User.findById(id);
-
-        console.log("USER", user);
-        
 
         if(!user) {
             return res.status(404).json({ message: "User not found" });
@@ -209,5 +200,68 @@ exports.getActivateBlockUser = async (req, res) => {
         return res.json({ message: "User status changed" });
     } catch (error) {
         res.status(500). json({ message: error.message });
+    }
+}
+
+exports.getApplicationsForPropertyById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log("Property ID:", id);
+        
+        
+        const requests = await Request.aggregate([
+            {
+                $match: {
+                    property: new mongoose.Types.ObjectId(id),
+                },
+            },
+            {
+                $lookup: {
+                from: "users",
+                localField: "user",
+                foreignField: "_id",
+                as: "user",
+                },
+            },
+
+            {
+            $unwind: {
+                path: "$user",
+                preserveNullAndEmptyArrays: true,
+            },
+            },
+
+            {
+                $lookup: {
+                from: "properties",
+                localField: "property",
+                foreignField: "_id",
+                as: "property",
+                },
+            },
+
+            {
+            $unwind: {
+                path: "$property",
+                preserveNullAndEmptyArrays: true,
+            },
+            },
+            {
+                $project: {
+                    message: 1,
+                    status: 1,
+                    createdAt: 1,
+                    user: "$user",
+                    property: "$property",
+                },
+            },
+        ]);
+
+        console.log("Requests", requests);
+        
+        
+        res.json({ requests });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 }

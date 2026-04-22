@@ -11,7 +11,8 @@ const {
     getStats,
     getUsersList,
     getUserById,
-    getActivateBlockUser
+    getActivateBlockUser,
+    getApplicationsForPropertyById
 } = require("../controllers/adminController");
 const adminOnly = require("../middleware/adminMiddleware");
 
@@ -27,5 +28,7 @@ adminRoutes.get("/stats", protect, adminOnly, getStats);
 adminRoutes.get("/get-users", protect, adminOnly, getUsersList);
 adminRoutes.get("/user/:id", protect, adminOnly, getUserById);
 adminRoutes.put("/user/:id/status", protect, adminOnly, getActivateBlockUser);
+
+adminRoutes.get("/property/:id/applications", protect, adminOnly, getApplicationsForPropertyById);
 
 module.exports = adminRoutes;

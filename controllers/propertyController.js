@@ -150,8 +150,10 @@ exports.deleteProperty = async (req, res) => {
 
 exports.getMyProperties = async (req, res) => {
   try {    
+    const { id } = req.params;
+    
     const data = await Property.find({
-      createdBy: req.user.id,
+      createdBy: id,
     }).sort({ createdAt: -1 });
     
     res.json(data);
