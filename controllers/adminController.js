@@ -6,18 +6,19 @@ const Request = require("../models/Request");
 exports.getOwnerRequests = async (req, res) => {
   try {
     const {
-      status = "all",
+      status,
       page = 1,
       limit = 10,
       search = "",
     } = req.query;
 
-    const query = {
-        role: "owner"
-    };
+    const query = {};
 
-    if (status !== "all") {
-      query.verificationStatus = status;
+    if (status === "all") {
+      query.$or = [
+            { role: "owner", verificationStatus: "approved" },
+            { role: "user", verificationStatus: { $in: ["pending", "rejected"] } }
+        ]
     }
 
     if (search) {
@@ -27,11 +28,17 @@ exports.getOwnerRequests = async (req, res) => {
       ];
     }
 
+    if(status !== "all") {
+        query.role = "owner";
+        query.verificationStatus = status;
+    }
+
     if (status === "rejected" || status === "pending") {
         query.role = "user";
+        query.verificationStatus = status;
     }    
 
-    const skip = (page - 1) * limit;
+    const skip = (page - 1) * limit;    
 
     const users = await User.find(query)
       .select("-password")
@@ -66,7 +73,12 @@ exports.getOwnerRequests = async (req, res) => {
       page: Number(page),
       totalPages: Math.ceil(total / limit),
       counts,
-      totalUsers: await User.countDocuments({ role: "owner", verificationStatus: ["pending", "approved", "rejected"] })
+      totalUsers: await User.countDocuments({
+        $or: [
+            { role: "owner", verificationStatus: "approved" },
+            { role: "user", verificationStatus: { $in: ["pending", "rejected"] } }
+        ]
+        })
     });
 
   } catch (error) {
