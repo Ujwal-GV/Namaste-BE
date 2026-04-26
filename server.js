@@ -11,6 +11,7 @@ const adminRoutes = require("./routes/adminRoutes");
 const utilityRoutes = require("./routes/utilityRoutes");
 const requestRoutes = require("./routes/requestRoutes");
 const conversationRoutes = require("./routes/conversationRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 // const passport = require("passport");
 
 
@@ -40,5 +41,6 @@ app.use("/admin", adminRoutes);
 app.use("/utilities", utilityRoutes);
 app.use("/requests", requestRoutes);
 app.use("/conversations", conversationRoutes);
+app.use("/", notificationRoutes);
 
 server.listen(port, () => console.log("Server running at port:\t" + port));
