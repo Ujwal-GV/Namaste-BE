@@ -1,5 +1,6 @@
 const Property = require("../models/Property");
 const Request = require("../models/Request");
+const { createNotification } = require("../utilities/notificationHelper");
 
 exports.addProperty = async (req, res) => {
     console.log("Add property1", req.user.id);
@@ -7,7 +8,7 @@ exports.addProperty = async (req, res) => {
     
     
   try {
-    const { title, location, rent, deposit, detailedAddress } = req.body;
+    const { title, location, rent, deposit, detailedAddress, description } = req.body;
     // console.log("Add property", req.body);
     // console.log("Files", req.files);
     
@@ -18,7 +19,7 @@ exports.addProperty = async (req, res) => {
     
     
 
-    if (!title || !location || !rent || !deposit || !detailedAddress) {
+    if (!title || !location || !rent || !deposit || !detailedAddress || !description) {
         console.log("All fields reqired");
         return res.status(400).json({ message: "Required fields missing" });
     }
@@ -32,6 +33,7 @@ exports.addProperty = async (req, res) => {
       deposit,
       detailedAddress,
       images: imgUrls,
+      description,
       createdBy: req.user.id,
     });
 
@@ -170,9 +172,7 @@ exports.updateRequestStatus = async (req, res) => {
 
     console.log("Entered update", status)
 
-    const request = await Request.findById(requestId).populate("property"); 
-    console.log("Request", request);
-       
+    const request = await Request.findById(requestId).populate("property");        
 
     if (!request) {        
       return res.status(404).json({ message: "Request not found" });
@@ -184,7 +184,20 @@ exports.updateRequestStatus = async (req, res) => {
     }
 
     request.status = status;
+
     await request.save();
+
+    const userId = (await Request.findById(requestId, { user: 1 })).user;
+    const propertyTitle = request.property.title;
+    
+
+    await createNotification({
+      userId: userId,
+      type: "STATUS",
+      title: "Application Update",
+      message: `Your application for ${propertyTitle} was ${status}`,
+      link: "/user-applications",
+    });
 
     res.json({ message: `Request ${status}`, request });
   } catch (err) {

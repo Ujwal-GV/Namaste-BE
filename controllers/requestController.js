@@ -1,6 +1,8 @@
 const Request = require("../models/Request");
 const Property = require("../models/Property");
 const { default: mongoose } = require("mongoose");
+const { createNotification } = require("../utilities/notificationHelper");
+const User = require("../models/User");
 
 exports.applyToProperty = async (req, res) => {
     try {
@@ -28,6 +30,18 @@ exports.applyToProperty = async (req, res) => {
             user: req.user.id,
             owner: property.createdBy,
             message,
+        });
+
+        const name = await User.findById(req.user.id, {_id: 0, name: 1 });
+        console.log("NAME", name);
+                
+
+        await createNotification({
+            userId: property.createdBy,
+            type: "APPLICATION",
+            title: "New Application",
+            message: `${name.name} applied to your property`,
+            link: "/owner-requests",
         });
 
         return res.status(201).json(request);
