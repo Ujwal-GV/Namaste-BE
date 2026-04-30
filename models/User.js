@@ -12,7 +12,10 @@ const userSchema = new mongoose.Schema({
         unique: true
     },
 
-    profilePic: String,
+    profilePic: {
+        type: String,
+        default: "https://res.cloudinary.com/daf6cmyaq/image/upload/v1777560932/noprofile_icndbw.png",
+    },
 
     mobile: String,
 
@@ -28,6 +31,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ["user", "owner", "admin"],
         default: "user",
+    },
+
+    location: {
+        type: String,
     },
 
     verificationStatus: {

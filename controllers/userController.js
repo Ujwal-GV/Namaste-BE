@@ -310,6 +310,7 @@ exports.updateProfile = async (req, res) => {
 
     if (req.body.name) updates.name = req.body.name;
     if (req.body.mobile) updates.mobile = req.body.mobile;
+    if (req.body.location) updates.location = req.body.location;
 
     if (req.files?.profilePic) {
       updates.profilePic = req.files.profilePic[0].path;

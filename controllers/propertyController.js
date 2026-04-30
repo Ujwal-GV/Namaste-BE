@@ -1,5 +1,6 @@
 const Property = require("../models/Property");
 const Request = require("../models/Request");
+const User = require("../models/User");
 const { createNotification } = require("../utilities/notificationHelper");
 
 exports.addProperty = async (req, res) => {
@@ -157,6 +158,9 @@ exports.getMyProperties = async (req, res) => {
     const data = await Property.find({
       createdBy: id,
     }).sort({ createdAt: -1 });
+
+    console.log("My posted properties", data.length);
+    
     
     res.json(data);
   } catch (error) {
@@ -169,8 +173,6 @@ exports.updateRequestStatus = async (req, res) => {
   try {    
     const { requestId } = req.params;
     const { status } = req.body;
-
-    console.log("Entered update", status)
 
     const request = await Request.findById(requestId).populate("property");        
 
@@ -202,5 +204,20 @@ exports.updateRequestStatus = async (req, res) => {
     res.json({ message: `Request ${status}`, request });
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+};
+
+exports.getPreferredProperties = async (req, res) => {
+  try {    
+    const id = req.user.id;    
+    
+    const userLocation = (await User.findById(id)).location;    
+
+    const properties = await Property.find({ location: userLocation });  
+    
+    res.json(properties);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: error.message });
   }
 };

@@ -12,12 +12,13 @@ const {
     getUsersList,
     getUserById,
     getActivateBlockUser,
-    getApplicationsForPropertyById
+    getApplicationsForPropertyById,
+    deleteUser
 } = require("../controllers/adminController");
 const adminOnly = require("../middleware/adminMiddleware");
 
 adminRoutes.use(protect, authorizeRoles("admin"));
-
+adminRoutes.delete("/delete-user/:id", protect, adminOnly, deleteUser);
 adminRoutes.get("/owner-requests", protect, adminOnly, getOwnerRequests);
 adminRoutes.put("/approve-owner/:id", protect, adminOnly, approveOwner);
 

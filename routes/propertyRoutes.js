@@ -12,11 +12,15 @@ const {
     deleteProperty,
     getMyProperties,
     updateRequestStatus,
+    getPreferredProperties,
 } = require("../controllers/propertyController");
 const upload = require("../controllers/upload");
 
+propertyRoutes.get("/preferred-properties", protect, getPreferredProperties);
+
 propertyRoutes.get("/", getProperties);
 propertyRoutes.get("/:id", getPropertyById);
+propertyRoutes.get("/my-properties/:id", protect, getMyProperties);
 
 propertyRoutes.post("/",  protect, authorizeRoles("owner", "admin"), upload.array("images", 5), addProperty);
 propertyRoutes.put("/:id", protect, authorizeRoles("owner", "admin"), upload.array("images", 5), updateProperty);

@@ -166,6 +166,20 @@ exports.getStats = async (req, res) => {
     });
 }
 
+exports.deleteUser = async (req, res) => {
+    try {
+        const id = req.params.id;
+        console.log("User to be deleted", id);
+        
+
+        const user = await User.findByIdAndDelete(id);
+
+        res.json({ message: "User deleted" });
+    } catch (error) {        
+        res.status(500). json({ message: error.message });
+    }
+}
+
 exports.getUsersList = async (req, res) => {
     try {
         const users = await User.aggregate([
