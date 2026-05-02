@@ -13,6 +13,8 @@ const {
     getMyProperties,
     updateRequestStatus,
     getPreferredProperties,
+    addToFavorites,
+    toggleFavorite,
 } = require("../controllers/propertyController");
 const upload = require("../controllers/upload");
 
@@ -28,6 +30,8 @@ propertyRoutes.delete("/:id", protect, authorizeRoles("admin", "owner"), deleteP
 
 propertyRoutes.get("/my-properties/:id", protect, getMyProperties);
 propertyRoutes.put("/update-status/:requestId", protect, updateRequestStatus);
+
+
 
 
 module.exports = propertyRoutes;

@@ -403,7 +403,45 @@ exports.getUserApplications = async (req, res) => {
     },
     },
     ]);
-    console.log("My app", requests);
-
     res.json(requests);
+};
+
+exports.getFavorites = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id)
+      .populate("favorites")
+      .select("favorites");
+
+    res.json(user.favorites);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.toggleFavorite = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { propertyId } = req.body;
+
+    const user = await User.findById(userId);
+
+    const exists = user.favorites.includes(propertyId);
+
+    if (exists) {
+      user.favorites.pull(propertyId);
+    } else {
+      user.favorites.push(propertyId);
+    }
+
+    await user.save();
+
+    res.json({
+      success: true,
+      isFavorite: !exists,
+      favorites: user.favorites,
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };

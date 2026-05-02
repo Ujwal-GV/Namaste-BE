@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const Property = require("./Property");
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -16,6 +17,13 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: "https://res.cloudinary.com/daf6cmyaq/image/upload/v1777560932/noprofile_icndbw.png",
     },
+
+    favorites: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Property",
+        }
+    ],
 
     mobile: String,
 

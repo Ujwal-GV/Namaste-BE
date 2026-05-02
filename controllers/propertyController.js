@@ -1,3 +1,4 @@
+const { updateSearchIndex } = require("../models/Notification");
 const Property = require("../models/Property");
 const Request = require("../models/Request");
 const User = require("../models/User");
@@ -157,10 +158,7 @@ exports.getMyProperties = async (req, res) => {
     
     const data = await Property.find({
       createdBy: id,
-    }).sort({ createdAt: -1 });
-
-    console.log("My posted properties", data.length);
-    
+    }).sort({ createdAt: -1 });    
     
     res.json(data);
   } catch (error) {
